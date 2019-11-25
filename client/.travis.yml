@@ -1,0 +1,25 @@
+language: generic 
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t edgarsc/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true edgarsc/react-test npm test
+
+after_success:
+  - docker build -t edgarsc/multi-client ./client
+  - docker build -t edgarsc/multi-nginx ./nginx
+  - docker build -t edgarsc/multi-server ./server
+  - docker build -t edgarsc/multi-worker ./worker  
+  
+# Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+
+# Take those images and push them to docker hub
+  - docker push edgarsc/multi-client
+  - docker push edgarsc/multi-nginx
+  - docker push edgarsc/multi-server
+  - docker push edgarsc/multi-worker
